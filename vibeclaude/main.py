@@ -65,6 +65,39 @@ def install_hook(project_dir: pathlib.Path) -> None:
         print(f"[install] Hook entry added to {settings_path}")
 
     print("[install] Done – Claude-Code will now run vibe-claude hook on Stop.")
+
+
+def install_hook_global() -> None:
+    """Register vibe-claude as a global hook in ~/.claude/config.json."""
+    home_dir = pathlib.Path.home()
+    claude_dir = home_dir / ".claude"
+    claude_dir.mkdir(parents=True, exist_ok=True)
+
+    # read / create config.json
+    config_path = claude_dir / "config.json"
+    try:
+        config: Dict[str, Any] = (
+            json.loads(config_path.read_text("utf-8")) if config_path.exists() else {}
+        )
+    except json.JSONDecodeError:
+        print("[install] Malformed config.json – starting fresh")
+        config = {}
+
+    stop_hooks: List[Dict[str, Any]] = config.setdefault("hooks", {}).setdefault("Stop", [])
+
+    # already present?
+    if any(
+        cmd.get("command") == CMD_PLACEHOLDER
+        for entry in stop_hooks
+        for cmd in entry.get("hooks", [])
+    ):
+        print("[install] Global hook already listed – nothing to do.")
+    else:
+        stop_hooks.append({"hooks": [{"type": "command", "command": CMD_PLACEHOLDER}]})
+        config_path.write_text(json.dumps(config, indent=2), "utf-8")
+        print(f"[install] Global hook entry added to {config_path}")
+
+    print("[install] Done – Claude-Code will now run vibe-claude hook globally on Stop.")
 # ╰────────────────────────────────────╯
 
 
@@ -108,10 +141,19 @@ def play_jingle() -> None:
         import platform
         
         if platform.system() == "Darwin":  # macOS
-            # Use built-in macOS sound
-            subprocess.Popen([
-                "afplay", "/System/Library/Sounds/Glass.aiff"
-            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            # Play multiple system sounds in sequence for a longer jingle
+            sounds = [
+                "/System/Library/Sounds/Glass.aiff",
+                "/System/Library/Sounds/Tink.aiff", 
+                "/System/Library/Sounds/Pop.aiff"
+            ]
+            
+            # Play sounds with small delays between them
+            for i, sound in enumerate(sounds):
+                delay = i * 0.3  # 300ms delay between sounds
+                subprocess.Popen([
+                    "bash", "-c", f"sleep {delay} && afplay '{sound}'"
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         else:
             # Fallback: try to generate audio with Python libs
             try:
@@ -119,10 +161,11 @@ def play_jingle() -> None:
                 from pydub.generators import Sine            # type: ignore
                 from pydub.playback import _play_with_simpleaudio as play  # type: ignore  # noqa: WPS450
                 
-                freqs = [523.25, 659.25, 783.99, 1046.5]        # C5 E5 G5 C6
+                # Longer melody: C-E-G-C-G-E-C (major arpeggio up and down)
+                freqs = [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25, 523.25]
                 seg = AudioSegment.empty()
                 for f in freqs:
-                    seg += Sine(f).to_audio_segment(duration=250)
+                    seg += Sine(f).to_audio_segment(duration=300)
                 play(seg)
             except ImportError:
                 pass  # silently ignore if audio libs unavailable
@@ -149,7 +192,13 @@ def run_hook(payload: Dict[str, Any]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Claude-Code Stop hook + installer (no API keys)")
-    parser.add_argument("--install", action="store_true", help="install hook into a project")
+    parser.add_argument("--install", action="store_true", help="install hook into a project or globally")
+    parser.add_argument(
+        "--global", "-g",
+        dest="global_install",
+        action="store_true",
+        help="install hook globally in ~/.claude/config.json (requires --install)"
+    )
     parser.add_argument(
         "--project-dir",
         type=pathlib.Path,
@@ -159,7 +208,10 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.install:
-        install_hook(args.project_dir.resolve())
+        if args.global_install:
+            install_hook_global()
+        else:
+            install_hook(args.project_dir.resolve())
     else:
         try:
             payload = json.load(sys.stdin)

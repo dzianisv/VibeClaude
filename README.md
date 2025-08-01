@@ -35,6 +35,11 @@ vibe-claude --install
 
 # Install in specific project directory
 vibe-claude --install --project-dir /path/to/project
+
+# Install globally for all Claude-Code sessions
+vibe-claude --install --global
+# or
+vibe-claude --install -g
 ```
 
 ### Manual Installation
@@ -52,11 +57,15 @@ python main.py --install --project-dir /path/to/project
 
 ## How It Works
 
-1. Registers `vibe-claude` as a Stop hook in `.claude/settings.json`
+1. Registers `vibe-claude` as a Stop hook in:
+   - `.claude/settings.json` (project-specific installation)
+   - `~/.claude/config.json` (global installation with `--global`)
 2. Uses the installed binary from PATH (no file copying needed)
 3. When Claude-Code finishes a task:
    - Shows desktop notification with the last assistant message
-   - Plays a pleasant 4-note arpeggio (C-E-G-C)
+   - Plays a pleasant multi-sound jingle:
+     - **macOS**: Sequence of Glass → Tink → Pop system sounds with 300ms delays
+     - **Other systems**: 7-note musical arpeggio (C-E-G-C-G-E-C) using generated tones
 
 ## License
 
