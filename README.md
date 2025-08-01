@@ -31,10 +31,10 @@ pip install .
 
 ```bash
 # Install in current project
-vibeclaude --install
+vibe-claude --install
 
 # Install in specific project directory
-vibeclaude --install --project-dir /path/to/project
+vibe-claude --install --project-dir /path/to/project
 ```
 
 ### Manual Installation
@@ -52,8 +52,8 @@ python main.py --install --project-dir /path/to/project
 
 ## How It Works
 
-1. Copies itself to your project's `.claude/hooks/` directory
-2. Registers as a Stop hook in `.claude/settings.json`
+1. Registers `vibe-claude` as a Stop hook in `.claude/settings.json`
+2. Uses the installed binary from PATH (no file copying needed)
 3. When Claude-Code finishes a task:
    - Shows desktop notification with the last assistant message
    - Plays a pleasant 4-note arpeggio (C-E-G-C)

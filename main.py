@@ -26,28 +26,19 @@ import argparse
 import json
 import os
 import pathlib
-import shutil
 import sys
 from typing import Any, Dict, List
 
 # ── constants ───────────────────────────────────────────────────
-HOOK_FILE      = "main.py"
-CMD_PLACEHOLDER = "$CLAUDE_PROJECT_DIR/.claude/hooks/" + HOOK_FILE
+CMD_PLACEHOLDER = "vibe-claude"
 # ────────────────────────────────────────────────────────────────
 
 
 # ╭──────────────────────── installer ╮
 def install_hook(project_dir: pathlib.Path) -> None:
-    """Copy this file into <project>/.claude/hooks/ and register it."""
+    """Register vibe-claude as a hook in Claude settings."""
     claude_dir = project_dir / ".claude"
-    hooks_dir  = claude_dir / "hooks"
-    hooks_dir.mkdir(parents=True, exist_ok=True)
-
-    src = pathlib.Path(__file__).resolve()
-    dst = hooks_dir / HOOK_FILE
-    if not dst.exists() or dst.read_bytes() != src.read_bytes():
-        shutil.copy2(src, dst)
-        print(f"[install] Copied hook to {dst}")
+    claude_dir.mkdir(parents=True, exist_ok=True)
 
     # read / create settings.json
     settings_path = claude_dir / "settings.json"
@@ -73,7 +64,7 @@ def install_hook(project_dir: pathlib.Path) -> None:
         settings_path.write_text(json.dumps(config, indent=2), "utf-8")
         print(f"[install] Hook entry added to {settings_path}")
 
-    print("[install] Done – Claude-Code will now run the jingle hook on Stop.")
+    print("[install] Done – Claude-Code will now run vibe-claude hook on Stop.")
 # ╰────────────────────────────────────╯
 
 

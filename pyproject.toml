@@ -32,7 +32,7 @@ Repository = "https://github.com/dzianisv/VibeClaude"
 Issues = "https://github.com/dzianisv/VibeClaude/issues"
 
 [project.scripts]
-vibeclaude = "main:main"
+vibe-claude = "main:main"
 
 [tool.setuptools]
 py-modules = ["main"]
