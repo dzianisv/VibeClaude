@@ -1,0 +1,1 @@
+"""VibeClaude - Claude-Code hook with notifications and audio feedback."""

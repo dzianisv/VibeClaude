@@ -82,31 +82,52 @@ def last_assistant_line(path: pathlib.Path) -> str:
 
 def notify(msg: str) -> None:
     try:
-        from plyer import notification  # type: ignore
-        notification.notify(title="Claude ✔ Finished", message=msg or "Task complete.")
+        import subprocess
+        import platform
+        
+        if platform.system() == "Darwin":  # macOS
+            subprocess.run([
+                "osascript", "-e", 
+                f'display notification "{msg or "Task complete."}" with title "Claude ✔ Finished"'
+            ], check=False)
+        else:
+            # Fallback for other systems
+            try:
+                from plyer import notification  # type: ignore
+                notification.notify(title="Claude ✔ Finished", message=msg or "Task complete.")
+            except ImportError:
+                pass
     except Exception:
-        pass  # no GUI / plyer unavailable – silently ignore
+        pass  # silently ignore notification failures
 
 
 def play_jingle() -> None:
-    """Generate a 4-note arpeggio and play it asynchronously."""
+    """Play a pleasant sound notification."""
     try:
-        from pydub import AudioSegment               # type: ignore
-        from pydub.generators import Sine            # type: ignore
-        from pydub.playback import _play_with_simpleaudio as play  # type: ignore  # noqa: WPS450
-    except ImportError as exc:
-        print(f"[hook] Audio modules missing ({exc})", file=sys.stderr)
-        return
-
-    freqs = [523.25, 659.25, 783.99, 1046.5]        # C5 E5 G5 C6
-    seg = AudioSegment.empty()
-    for f in freqs:
-        seg += Sine(f).to_audio_segment(duration=250)
-
-    try:
-        play(seg)  # returns immediately – won’t block Claude’s log
-    except Exception as exc:
-        print(f"[hook] Could not play jingle ({exc})", file=sys.stderr)
+        import subprocess
+        import platform
+        
+        if platform.system() == "Darwin":  # macOS
+            # Use built-in macOS sound
+            subprocess.Popen([
+                "afplay", "/System/Library/Sounds/Glass.aiff"
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            # Fallback: try to generate audio with Python libs
+            try:
+                from pydub import AudioSegment               # type: ignore
+                from pydub.generators import Sine            # type: ignore
+                from pydub.playback import _play_with_simpleaudio as play  # type: ignore  # noqa: WPS450
+                
+                freqs = [523.25, 659.25, 783.99, 1046.5]        # C5 E5 G5 C6
+                seg = AudioSegment.empty()
+                for f in freqs:
+                    seg += Sine(f).to_audio_segment(duration=250)
+                play(seg)
+            except ImportError:
+                pass  # silently ignore if audio libs unavailable
+    except Exception:
+        pass  # silently ignore audio failures
 
 
 def run_hook(payload: Dict[str, Any]) -> None:

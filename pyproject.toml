@@ -21,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "plyer",
     "pydub",
     "simpleaudio",
 ]
@@ -32,7 +31,8 @@ Repository = "https://github.com/dzianisv/VibeClaude"
 Issues = "https://github.com/dzianisv/VibeClaude/issues"
 
 [project.scripts]
-vibe-claude = "main:main"
+vibe-claude = "vibeclaude.main:main"
 
-[tool.setuptools]
-py-modules = ["main"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vibeclaude*"]
